@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: passcheck-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: passcheck
+      POSTGRES_USER: passcheck
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U passcheck -d passcheck"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - passnet
+
+  app:
+    image: passcheck:1.0
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: passcheck-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - passnet
+
+volumes:
+  pgdata:
+    name: passcheck_pgdata
+
+networks:
+  passnet:
+    name: docker_passnet
+    driver: bridge

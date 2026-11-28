@@ -1,0 +1,6 @@
+Flask~=3.1
+SQLAlchemy~=2.0
+psycopg2-binary~=2.9
+python-dotenv~=1.0
+# Gunicorn is for Linux production (VM / Docker / Kubernetes). It cannot run on Windows.
+gunicorn>=22; sys_platform != "win32"
